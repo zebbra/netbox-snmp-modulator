@@ -8,18 +8,14 @@
   {% with s=r.normal %}
   <tr>
     <th scope="row" class="text-nowrap">{% trans "Modules" %}</th>
-    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m %}
-      {% if s.would_remove %}<div class="mt-1">{% trans "would remove" %}: {% for x in s.would_remove %}<span class="badge text-bg-warning me-1">{{ x }}</span>{% endfor %}</div>{% endif %}
-      <div class="text-muted mt-1">{% trans "now" %}: {{ s.current|join:", "|default:"—" }}</div>
+    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m remove=s.would_remove %}
     </td>
   </tr>
   {% endwith %}
   {% if r.fast %}{% with s=r.fast %}
   <tr>
     <th scope="row" class="text-nowrap">{% trans "Fast modules" %}</th>
-    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m %}
-      {% if s.would_remove %}<div class="mt-1">{% trans "would remove" %}: {% for x in s.would_remove %}<span class="badge text-bg-warning me-1">{{ x }}</span>{% endfor %}</div>{% endif %}
-      <div class="text-muted mt-1">{% trans "now" %}: {{ s.current|join:", "|default:"—" }}</div>
+    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m remove=s.would_remove %}
     </td>
   </tr>
   {% endwith %}{% endif %}
@@ -28,7 +24,6 @@
     <th scope="row" class="text-nowrap">{% trans "Polling" %}</th>
     <td>{{ r.normal.polling|default:"—" }}{% if r.fast %} <span class="text-muted">({% trans "fast" %} {{ r.fast.polling|default:"—" }})</span>{% endif %}
       <span class="text-muted">{% trans "at least" %}</span>
-      <div class="text-muted">{% trans "now" %}: {{ r.normal.current_polling|default:"—" }}{% if r.fast %} ({% trans "fast" %} {{ r.fast.current_polling|default:"—" }}){% endif %}</div>
     </td>
   </tr>
   {% endif %}
@@ -40,7 +35,6 @@
       {% elif r.auth.try %}<span class="text-muted">{% trans "try" %}</span> {% for p in r.auth.try %}<code>{{ p }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}
       {% else %}<span class="text-muted">—</span>{% endif %}
       {% if full and r.auth.rule %}<span class="text-muted">({{ r.auth.rule }})</span>{% endif %}
-      <div class="text-muted">{% trans "now" %}: {{ r.auth.current|default:"—" }}</div>
     </td>
   </tr>
   {% if full and r.hooks %}

@@ -4,6 +4,7 @@
 {% block title %}{% trans "SNMP Modulator Rules" %}{% endblock %}
 
 {% block content %}
+<style>.mod-chevron{display:inline-block;transition:transform .15s}a:not(.collapsed)>.mod-chevron{transform:rotate(90deg)}</style>
 <div class="text-muted small mb-2">
   <i class="mdi mdi-information-outline" aria-hidden="true"></i>
   {% blocktrans trimmed %}
@@ -42,8 +43,12 @@
 {% else %}
 
 <div class="card mb-3">
-  <div class="card-header"><i class="mdi mdi-cog-outline" aria-hidden="true"></i> <strong>{% trans "For every device" %}</strong></div>
-  <div class="card-body">
+  <div class="card-header">
+    <a href="#mod-defaults" class="text-reset text-decoration-none collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="mod-defaults">
+      <i class="mdi mdi-chevron-right mod-chevron" aria-hidden="true"></i> <i class="mdi mdi-cog-outline" aria-hidden="true"></i> <strong>{% trans "Defaults" %}</strong>
+    </a>
+  </div>
+  <div class="collapse" id="mod-defaults"><div class="card-body">
     <div class="row g-3 small">
       <div class="col-md-6">
         <div class="mb-1"><strong>{% trans "Default modules" %}:</strong>
@@ -63,14 +68,8 @@
         {% if info.pin_tag %}<div class="mb-1"><strong>{% trans "Pinned" %}:</strong> {% blocktrans trimmed with tag=info.pin_tag %}devices tagged <code>{{ tag }}</code> are never changed{% endblocktrans %}</div>{% endif %}
       </div>
     </div>
-    <div class="small text-muted mt-2">
-      <span class="badge text-bg-success">add</span> {% trans "always set" %} ·
-      <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">try</span> {% trans "set if the device returns data for it" %} ·
-      <span class="badge text-bg-danger text-decoration-line-through">block</span> {% trans "never set" %} ·
-      <code>_ALL</code> {% trans "every module" %}
-    </div>
   </div>
-</div>
+</div></div>
 
 <div class="card mb-3">
   <div class="card-header d-flex flex-wrap align-items-center gap-2">
@@ -79,6 +78,13 @@
     <input type="search" id="mod-rule-filter" class="form-control form-control-sm ms-auto" style="max-width: 18rem"
            placeholder="{% trans 'Filter: module, model, name…' %}" aria-label="{% trans 'Filter rules' %}">
   </div>
+    <div class="small text-muted px-3 py-2 border-bottom">
+      <span class="badge text-bg-success">add</span> {% trans "always set" %} ·
+      <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">try</span> {% trans "set if the device returns data for it" %} ·
+      <span class="badge text-bg-danger text-decoration-line-through">block</span> {% trans "never set" %} ·
+      <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">would remove</span> {% trans "removed on the next probe" %} ·
+      <code>_ALL</code> {% trans "every module" %}
+    </div>
   <div class="table-responsive">
     <table class="table table-hover table-headings mb-0 align-top" id="mod-rules">
       <thead>

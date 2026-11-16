@@ -1,7 +1,11 @@
 {% load i18n %}
 <div class="card">
   <div class="card-header d-flex align-items-center gap-2">
-    <h2 class="card-title mb-0"><i class="mdi mdi-tune-variant" aria-hidden="true"></i> {% trans "SNMP Modulator" %}</h2>
+    <h2 class="card-title mb-0">
+      <a href="#mod-card-body" class="text-reset text-decoration-none collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="mod-card-body">
+        <i class="mdi mdi-chevron-right mod-chevron" aria-hidden="true"></i> <i class="mdi mdi-tune-variant" aria-hidden="true"></i> {% trans "SNMP Modulator" %}
+      </a>
+    </h2>
     {% if mod_can_run and mod_has_ip %}
     <div class="ms-auto d-flex gap-1">
       <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mod-probe-modal"
@@ -20,11 +24,25 @@
     </div>
     {% endif %}
   </div>
-  <div class="card-body" hx-get="{% url 'plugins:netbox_snmp_modulator:device_card_data' pk=mod_device.pk %}" hx-trigger="load" hx-swap="innerHTML">
-    <span class="spinner-border spinner-border-sm text-muted" role="status" aria-hidden="true"></span>
-    <span class="text-muted small">{% trans "Loading rules…" %}</span>
+  <div class="collapse" id="mod-card-body">
+    <div class="card-body" hx-get="{% url 'plugins:netbox_snmp_modulator:device_card_data' pk=mod_device.pk %}" hx-trigger="shown.bs.collapse from:#mod-card-body once" hx-swap="innerHTML">
+      <span class="spinner-border spinner-border-sm text-muted" role="status" aria-hidden="true"></span>
+      <span class="text-muted small">{% trans "Loading rules…" %}</span>
+    </div>
   </div>
 </div>
+<style>.mod-chevron{display:inline-block;transition:transform .15s}a:not(.collapsed)>.mod-chevron{transform:rotate(90deg)}</style>
+<script>
+(function () {
+  var el = document.getElementById("mod-card-body");
+  var key = "mod-card-open";
+  el.addEventListener("shown.bs.collapse", function () { try { localStorage.setItem(key, "1"); } catch (e) {} });
+  el.addEventListener("hidden.bs.collapse", function () { try { localStorage.removeItem(key); } catch (e) {} });
+  var open = false;
+  try { open = localStorage.getItem(key) === "1"; } catch (e) {}
+  if (open) { document.addEventListener("DOMContentLoaded", function () { var a = document.querySelector("a[href=\"#mod-card-body\"]"); if (a) a.click(); }); }
+})();
+</script>
 {% if mod_can_run and mod_has_ip %}
 <div class="modal fade" id="mod-probe-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
