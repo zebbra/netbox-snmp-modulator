@@ -1,5 +1,4 @@
 {% load i18n %}
-{% load modulator_filters %}
 {% if unsupported %}
 <div class="text-muted small"><i class="mdi mdi-information-outline" aria-hidden="true"></i> {{ error }}</div>
 {% elif not_found %}
@@ -7,69 +6,9 @@
 {% elif error %}
 <div class="text-danger small"><i class="mdi mdi-alert" aria-hidden="true"></i> {{ error }}</div>
 {% else %}
-{% if r.pinned %}
-<div class="alert alert-warning py-1 px-2 small mb-2"><i class="mdi mdi-pin" aria-hidden="true"></i>
-  {% blocktrans trimmed with tag=r.pin_tag %}Pinned with <code>{{ tag }}</code>: the modulator never changes this device.{% endblocktrans %}</div>
-{% endif %}
-<table class="table table-sm table-borderless mb-0 small align-top">
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Rules" %}</th>
-    <td>
-      {% for rule in r.rules %}
-      <div><a href="{% url 'plugins:netbox_snmp_modulator:rules' %}#rule-{{ rule.index|add:1 }}">{{ rule.name }}</a>
-        <span class="text-muted">{% for label, value in rule.match %}{{ label }} {{ value|default:"—" }}{% if not forloop.last %} · {% endif %}{% endfor %}</span></div>
-      {% empty %}<span class="text-muted">{% trans "none, defaults only" %}</span>
-      {% endfor %}
-    </td>
-  </tr>
-  {% with s=r.normal %}
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Modules" %}</th>
-    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m %}
-      {% if s.would_remove %}<div class="mt-1">{% trans "would remove" %}: {% for x in s.would_remove %}<span class="badge text-bg-warning me-1">{{ x }}</span>{% endfor %}</div>{% endif %}
-      <div class="text-muted mt-1">{% trans "now" %}: {{ s.current|join:", "|default:"—" }}</div>
-    </td>
-  </tr>
-  {% endwith %}
-  {% if r.fast %}{% with s=r.fast %}
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Fast modules" %}</th>
-    <td>{% include "netbox_snmp_modulator/rule_modules.html" with m=s.m %}
-      {% if s.would_remove %}<div class="mt-1">{% trans "would remove" %}: {% for x in s.would_remove %}<span class="badge text-bg-warning me-1">{{ x }}</span>{% endfor %}</div>{% endif %}
-      <div class="text-muted mt-1">{% trans "now" %}: {{ s.current|join:", "|default:"—" }}</div>
-    </td>
-  </tr>
-  {% endwith %}{% endif %}
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Polling" %}</th>
-    <td>{{ r.normal.polling|default:"—" }}{% if r.fast %} <span class="text-muted">({% trans "fast" %} {{ r.fast.polling|default:"—" }})</span>{% endif %}
-      <span class="text-muted">{% trans "at least" %}</span>
-      <div class="text-muted">{% trans "now" %}: {{ r.normal.current_polling|default:"—" }}{% if r.fast %} ({% trans "fast" %} {{ r.fast.current_polling|default:"—" }}){% endif %}</div>
-    </td>
-  </tr>
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Auth" %}</th>
-    <td>
-      {% if r.auth.use == "" %}<span class="badge text-bg-secondary">{% trans "no SNMP" %}</span>
-      {% elif r.auth.use %}<code>{{ r.auth.use }}</code> <span class="text-muted">{% trans "set" %}</span>
-      {% elif r.auth.try %}<span class="text-muted">{% trans "try" %}</span> {% for p in r.auth.try %}<code>{{ p }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}
-      {% else %}<span class="text-muted">—</span>{% endif %}
-      {% if r.auth.rule %}<span class="text-muted">({{ r.auth.rule }})</span>{% endif %}
-      <div class="text-muted">{% trans "now" %}: {{ r.auth.current|default:"—" }}</div>
-    </td>
-  </tr>
-  {% if r.hooks %}
-  <tr><th scope="row" class="text-nowrap">{% trans "Hooks" %}</th><td>{% for h in r.hooks %}<div>{{ h }}</div>{% endfor %}</td></tr>
-  {% endif %}
-  <tr>
-    <th scope="row" class="text-nowrap">{% trans "Last run" %}</th>
-    <td><span title="{{ last_updated|mod_absolute }}">{{ last_updated|mod_relative|default:"—" }}</span></td>
-  </tr>
-</table>
-<div class="small text-muted mt-2">
-  <span class="badge text-bg-success">add</span> {% trans "always" %} ·
-  <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">try</span> {% trans "if the device answers" %} ·
-  <span class="badge text-bg-danger text-decoration-line-through">block</span> {% trans "never" %}
-  {% if r.module_policy == "drop" %} · {% trans "modules no rule gives are removed at the next run" %}{% endif %}
+{% include "netbox_snmp_modulator/match_result.html" with full=False %}
+<div class="small mt-2">
+  <a href="{% url 'plugins:netbox_snmp_modulator:rules' %}?device={{ device.pk }}"><i class="mdi mdi-help-circle-outline" aria-hidden="true"></i> {% trans "Why?" %}</a>
+  <span class="text-muted">{% blocktrans count n=r.rules|length %}{{ n }} rule matches{% plural %}{{ n }} rules match{% endblocktrans %}</span>
 </div>
 {% endif %}

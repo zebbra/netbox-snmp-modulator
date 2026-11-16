@@ -1,3 +1,4 @@
+import ipaddress
 import re
 import uuid
 from datetime import timedelta
@@ -6,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.cache import cache
+from django.db.models import Q
 from django.http import QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -129,7 +131,8 @@ def rules_context(data):
         rows.append({
             "n": i,
             "name": r.get("name") or f"#{i}",
-            "match": [(_rule_match_label(k), k, _rule_values(v)) for k, v in (r.get("match") or {}).items()],
+            "match": [{"label": _rule_match_label(k), "key": k, "values": _rule_values(v)}
+                      for k, v in (r.get("match") or {}).items()],
             "normal": _rule_modules(mods),
             "fast": _rule_modules(mods.get("fast")),
             "polling": _rule_polling(mods),
@@ -152,17 +155,71 @@ def rules_context(data):
     return rows, info
 
 
+def _compared(value):
+    if isinstance(value, list):
+        return ", ".join(str(v) for v in value) or "—"
+    return "—" if value in (None, "") else str(value)
+
+
+def resolve_host(request, host):
+    """(device, error) for a device name or IP the user may view: an IP
+    matches the primary IPv4/IPv6, a name exactly, then a unique prefix."""
+    host = (host or "").strip()
+    qs = Device.objects.restrict(request.user, "view")
+    if not host:
+        return None, None
+    try:
+        ipaddress.ip_address(host)
+        hits = list(qs.filter(Q(primary_ip4__address__net_host=host) | Q(primary_ip6__address__net_host=host))[:2])
+    except ValueError:
+        hits = list(qs.filter(name__iexact=host)[:2]) or list(qs.filter(name__istartswith=host).order_by("name")[:6])
+    if len(hits) == 1:
+        return hits[0], None
+    if not hits:
+        return None, _("No device found for %(host)s.") % {"host": host}
+    return None, _("%(host)s matches several devices: %(names)s") % {
+        "host": host, "names": ", ".join(d.name for d in hits[:5]) + ("…" if len(hits) > 5 else "")}
+
+
 class RulesView(PermissionRequiredMixin, View):
     """The modulator's rules (GET /rules) as a readable table, for users
-    without access to the modulator itself."""
+    without access to the modulator itself. With a host (?host= name or IP,
+    or ?device=<id>), /rules/match marks the rules that device matches and
+    shows what they add up to."""
     permission_required = USE_PERM
 
     def get(self, request):
         ok, data, error = client.rules(plugin_config())
         rows, info = rules_context(data or {}) if ok else ([], None)
-        return render(request, "netbox_snmp_modulator/rules.html", {
-            "rows": rows, "info": info, "error": None if ok else error,
-        })
+        context = {"rows": rows, "info": info, "error": None if ok else error,
+                   "host": request.GET.get("host", "").strip()}
+        device, host_error = None, None
+        dev_id = request.GET.get("device", "")
+        if dev_id.isdigit():
+            device = Device.objects.restrict(request.user, "view").filter(pk=int(dev_id)).first()
+            host_error = None if device else _("No device with id %(id)s.") % {"id": dev_id}
+        elif context["host"]:
+            device, host_error = resolve_host(request, context["host"])
+        if device:
+            context["host"] = context["host"] or device.name
+            m_ok, m_data, m_error = client.match(plugin_config(), device.pk)
+            if m_ok:
+                r = match_context(m_data)
+                context.update({"r": r, "r_ok": True})
+                matched = {}
+                for mr in (m_data or {}).get("matched_rules") or []:
+                    if isinstance(mr.get("index"), int):
+                        matched[mr["index"] + 1] = {m.get("field"): _compared(m.get("value")) for m in mr.get("match") or []}
+                for row in rows:
+                    row["matched"] = row["n"] in matched
+                    for m in row["match"]:
+                        m["compared"] = matched.get(row["n"], {}).get(m["key"])
+                context["matched_count"] = len(matched)
+            else:
+                host_error = f"{device.name}: {m_error}"
+        context.update({"device": device, "host_error": host_error,
+                        "last_updated": device.cf.get(plugin_config().get("last_updated_cf")) if device else None})
+        return render(request, "netbox_snmp_modulator/rules.html", context)
 
 
 # ── Device card ──────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import django
 
 django.setup()
 
-from netbox_snmp_modulator.views import _rule_values, _section, match_context, rules_context  # noqa: E402
+from netbox_snmp_modulator.views import _compared, _rule_values, _section, match_context, rules_context  # noqa: E402
 
 
 class RuleValuesTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class RulesContextTest(unittest.TestCase):
             "rules": [{"name": "x", "match": {"custom_fields.service_group": "ani"},
                        "modules": {"add": ["a"], "fast": {"try": ["b"]}}, "auth": {"use": None}}],
         })
-        self.assertEqual(rows[0]["match"][0][0], "service_group")
+        self.assertEqual(rows[0]["match"][0]["label"], "service_group")
         self.assertEqual(rows[0]["fast"]["try"], ["b"])
         self.assertEqual(rows[0]["auth"], {"kind": "use", "profiles": []})
         self.assertEqual(info["module_policy"], "drop")
@@ -44,3 +44,11 @@ class MatchContextTest(unittest.TestCase):
                            "matched_rules": [{"index": 0, "name": "n", "match": [{"field": "tags", "value": ["x"]}]}]})
         self.assertIsNone(r["fast"])
         self.assertEqual(r["rules"][0]["match"][0][0], "Tag")
+
+
+class ComparedTest(unittest.TestCase):
+    def test_values(self):
+        self.assertEqual(_compared(["a", "b"]), "a, b")
+        self.assertEqual(_compared([]), "—")
+        self.assertEqual(_compared(None), "—")
+        self.assertEqual(_compared("3650"), "3650")
