@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "netbox-snmp-modulator"
+version = "0.1.0"
+description = "NetBox plugin for the SNMP Exporter Modulator: rules, per-device preview and bulk runs."
+authors = []
+readme = "README.md"
+license = "Apache-2.0"
+packages = [{ include = "netbox_snmp_modulator" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

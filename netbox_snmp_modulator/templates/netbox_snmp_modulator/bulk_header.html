@@ -1,0 +1,19 @@
+{% load i18n %}
+{# Tabs and filter badges shared by the bulk page; the filter carries over between tabs. #}
+{% if presets %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <span class="text-muted small">{% trans "Presets" %}:</span>
+  {% for p in presets %}
+  <a href="?{{ p.qs }}" class="btn btn-sm py-0 {% if p.active %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ p.label }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="text-muted small">{% trans "Filter" %}:</span>
+  {% for key, values in filter_params.lists %}
+    {% for v in values %}<span class="badge text-bg-secondary">{{ key }}={{ v }}</span>{% endfor %}
+  {% endfor %}
+  <a href="{% url 'dcim:device_list' %}?{{ filter_qs }}" class="btn btn-sm btn-outline-secondary py-0">
+    <i class="mdi mdi-filter-variant" aria-hidden="true"></i> {% trans "Edit in device list" %}
+  </a>
+</div>

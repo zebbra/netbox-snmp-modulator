@@ -1,0 +1,49 @@
+{% load i18n %}
+<div class="dropdown d-inline-block">
+  <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+          title="{% trans 'SNMP Modulator for the ticked devices, or for all matching this filter' %}">
+    <i class="mdi mdi-tune-variant" aria-hidden="true"></i> {% trans "SNMP Modulator" %}
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item mod-bulk-link" href="{% url 'plugins:netbox_snmp_modulator:bulk' %}{% if mod_filter_qs %}?{{ mod_filter_qs }}{% endif %}">
+      <i class="mdi mdi-eye-check-outline" aria-hidden="true"></i> <span class="mod-bulk-label">{% trans "Dry run: filtered devices" %}</span></a></li>
+    <li><a class="dropdown-item" href="{% url 'plugins:netbox_snmp_modulator:rules' %}">
+      <i class="mdi mdi-format-list-numbered" aria-hidden="true"></i> {% trans "Rules" %}</a></li>
+  </ul>
+</div>
+<script>
+(function () {
+  // Ticked rows win over the filter: send their ids (id=…&id=…). The list's
+  // checkboxes live in a form this button isn't part of, so read them here.
+  var link = document.currentScript.previousElementSibling.querySelector(".mod-bulk-link");
+  var label = link.querySelector(".mod-bulk-label");
+  var base = link.getAttribute("href").split("?")[0], filtered = link.getAttribute("href");
+  var MAX_GET = 400;
+  function picked() {
+    return Array.prototype.map.call(document.querySelectorAll('input[name="pk"]:checked'), function (c) { return c.value; })
+      .filter(function (v) { return /^\d+$/.test(v); });
+  }
+  function update() {
+    var ids = picked();
+    label.textContent = ids.length ? "{{ _('Dry run: ticked devices')|escapejs }} (" + ids.length + ")" : "{{ _('Dry run: filtered devices')|escapejs }}";
+  }
+  document.addEventListener("change", function (e) { if (e.target.matches('input[name="pk"], input.toggle')) setTimeout(update, 0); });
+  link.addEventListener("click", function (e) {
+    var ids = picked();
+    if (!ids.length) { link.setAttribute("href", filtered); return; }
+    e.preventDefault();
+    if (ids.length <= MAX_GET) {
+      window.location = base + "?" + ids.map(function (i) { return "id=" + i; }).join("&");
+      return;
+    }
+    // too long for a URL: POST the ids, the page answers with a redirect to a short filter
+    var f = document.createElement("form");
+    f.method = "post"; f.action = base + "select/";
+    var t = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    f.innerHTML = '<input type="hidden" name="csrfmiddlewaretoken" value="' + (t ? t.value : "") + '">';
+    ids.forEach(function (i) { var x = document.createElement("input"); x.type = "hidden"; x.name = "id"; x.value = i; f.appendChild(x); });
+    document.body.appendChild(f); f.submit();
+  });
+  update();
+})();
+</script>

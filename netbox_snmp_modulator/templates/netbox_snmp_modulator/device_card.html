@@ -1,0 +1,40 @@
+{% load i18n %}
+<div class="card">
+  <div class="card-header d-flex align-items-center gap-2">
+    <h2 class="card-title mb-0"><i class="mdi mdi-tune-variant" aria-hidden="true"></i> {% trans "SNMP Modulator" %}</h2>
+    {% if mod_can_run and mod_has_ip %}
+    <div class="ms-auto d-flex gap-1">
+      <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mod-probe-modal"
+              hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=mod_device.pk %}"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-vals='{"dry_run": "true"}'
+              hx-target="#mod-probe-body" hx-swap="innerHTML"
+              title="{% trans 'Probe now as a dry run: nothing is written' %}">
+        <i class="mdi mdi-radar" aria-hidden="true"></i> {% trans "Preview" %}
+      </button>
+      <form method="post" action="{% url 'plugins:netbox_snmp_modulator:apply' pk=mod_device.pk %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-primary" title="{% trans 'Probe and write the result to NetBox, in the background' %}">
+          <i class="mdi mdi-content-save-check" aria-hidden="true"></i> {% trans "Apply now" %}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-body" hx-get="{% url 'plugins:netbox_snmp_modulator:device_card_data' pk=mod_device.pk %}" hx-trigger="load" hx-swap="innerHTML">
+    <span class="spinner-border spinner-border-sm text-muted" role="status" aria-hidden="true"></span>
+    <span class="text-muted small">{% trans "Loading rules…" %}</span>
+  </div>
+</div>
+{% if mod_can_run and mod_has_ip %}
+<div class="modal fade" id="mod-probe-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "SNMP Modulator" %} · {{ mod_device.name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="mod-probe-body"><div class="text-muted">{% trans "Probing… (up to a minute)" %}</div></div>
+    </div>
+  </div>
+</div>
+{% endif %}
