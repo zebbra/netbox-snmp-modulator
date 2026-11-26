@@ -3,6 +3,9 @@ import re
 import uuid
 from datetime import timedelta
 
+from concurrent.futures import ThreadPoolExecutor
+
+from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -220,6 +223,26 @@ class RulesView(PermissionRequiredMixin, View):
         context.update({"device": device, "host_error": host_error,
                         "last_updated": device.cf.get(plugin_config().get("last_updated_cf")) if device else None})
         return render(request, "netbox_snmp_modulator/rules.html", context)
+
+
+class StatusView(PermissionRequiredMixin, View):
+    """The modulator backend: /health, and /stats when it is reachable."""
+    permission_required = USE_PERM
+
+    def get(self, request):
+        config = plugin_config()
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            h = executor.submit(client.health, config)
+            st = executor.submit(client.stats, config)
+            ok, data, error = h.result()
+            s_ok, s_data, s_error = st.result()
+        health = {"ok": ok, "data": data or {}, "error": error,
+                  "stats": {"ok": s_ok, "data": s_data or {}, "error": s_error} if ok else None}
+        return render(request, "netbox_snmp_modulator/status.html", {
+            "health": health,
+            "url": config.get("url", ""),
+            "plugin_version": apps.get_app_config("netbox_snmp_modulator").version,
+        })
 
 
 # ── Device card ──────────────────────────────────────────────────────────────

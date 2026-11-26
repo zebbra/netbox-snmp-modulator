@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "netbox-snmp-modulator"
-version = "0.1.0"
+version = "0.1.1"
 description = "NetBox plugin for the SNMP Exporter Modulator: rules, per-device preview and bulk runs."
 authors = []
 readme = "README.md"

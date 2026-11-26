@@ -20,5 +20,15 @@ menu = PluginMenu(
                 ),
             ),
         ),
+        (
+            _("Status"),
+            (
+                PluginMenuItem(
+                    link="plugins:netbox_snmp_modulator:status",
+                    link_text=_("Backend"),
+                    permissions=["netbox_snmp_modulator.use_modulator"],
+                ),
+            ),
+        ),
     ),
 )

@@ -20,7 +20,7 @@ PLUGINS_CONFIG = {
 
 Then `manage.py migrate`. Other settings and their defaults: `netbox_snmp_modulator/__init__.py`.
 
-Permissions: `netbox_snmp_modulator.use_modulator` (rules, device card) and `netbox_snmp_modulator.run_modulator` (preview, apply, bulk).
+Permissions: `netbox_snmp_modulator.use_modulator` (rules, backend status, device card) and `netbox_snmp_modulator.run_modulator` (preview, apply, bulk).
 
 ## Tests
 

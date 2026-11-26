@@ -169,8 +169,8 @@
 </div>
 
 {% if dry_run and result.pending %}
-<form hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=device.pk %}"
-      hx-target="#mod-probe-body" hx-swap="innerHTML" hx-indicator="#mod-probe-spinner">
+<form class="d-flex align-items-center gap-2" hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=device.pk %}"
+      hx-target="#mod-probe-body" hx-swap="innerHTML" hx-disabled-elt="find button">
   {% csrf_token %}
   <input type="hidden" name="dry_run" value="false">
   <input type="hidden" name="wait" value="true">
@@ -179,6 +179,7 @@
     <i class="mdi mdi-content-save-check" aria-hidden="true"></i>
     {% trans "Commit" %}
   </button>
+  <span class="htmx-indicator spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
 </form>
 {% elif not dry_run %}
 <div class="text-success small">
@@ -208,8 +209,8 @@
 <div class="alert alert-warning">
   {{ data.detail|default:"The probe queue is busy right now — no slot freed up in time for a preview." }}
 </div>
-<form hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=device.pk %}"
-      hx-target="#mod-probe-body" hx-swap="innerHTML" hx-indicator="#mod-probe-spinner">
+<form class="d-flex align-items-center gap-2" hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=device.pk %}"
+      hx-target="#mod-probe-body" hx-swap="innerHTML" hx-disabled-elt="find button">
   {% csrf_token %}
   <input type="hidden" name="dry_run" value="true">
   <input type="hidden" name="wait" value="false">
@@ -217,6 +218,7 @@
     <i class="mdi mdi-tray-arrow-down" aria-hidden="true"></i>
     {% trans "Blindly accept and queue (no preview)" %}
   </button>
+  <span class="htmx-indicator spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
 </form>
 
 {% elif status_code == 404 %}
@@ -239,5 +241,3 @@
   {% trans "Unexpected response" %} (HTTP {{ status_code }}): {{ data }}
 </div>
 {% endif %}
-
-<span id="mod-probe-spinner" class="htmx-indicator spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>

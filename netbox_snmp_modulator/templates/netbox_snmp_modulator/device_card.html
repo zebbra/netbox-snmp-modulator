@@ -12,6 +12,7 @@
               hx-post="{% url 'plugins:netbox_snmp_modulator:probe' pk=mod_device.pk %}"
               hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-vals='{"dry_run": "true"}'
               hx-target="#mod-probe-body" hx-swap="innerHTML"
+              hx-on::before-request="document.getElementById('mod-probe-body').innerHTML = document.getElementById('mod-probe-loading').innerHTML"
               title="{% trans 'Probe now as a dry run: nothing is written' %}">
         <i class="mdi mdi-radar" aria-hidden="true"></i> {% trans "Preview" %}
       </button>
@@ -44,6 +45,12 @@
 })();
 </script>
 {% if mod_can_run and mod_has_ip %}
+<template id="mod-probe-loading">
+  <div class="d-flex flex-column align-items-center gap-2 py-5 text-muted">
+    <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+    <div>{% trans "Probing the device… (up to a minute)" %}</div>
+  </div>
+</template>
 <div class="modal fade" id="mod-probe-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -51,7 +58,7 @@
         <h5 class="modal-title">{% trans "SNMP Modulator" %} · {{ mod_device.name }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="mod-probe-body"><div class="text-muted">{% trans "Probing… (up to a minute)" %}</div></div>
+      <div class="modal-body" id="mod-probe-body"></div>
     </div>
   </div>
 </div>

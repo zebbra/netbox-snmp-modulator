@@ -5,7 +5,7 @@ class SnmpModulatorConfig(PluginConfig):
     name = "netbox_snmp_modulator"
     verbose_name = "SNMP Modulator"
     description = "Rules, per-device preview and bulk runs of the SNMP Exporter Modulator"
-    version = "0.1.0"
+    version = "0.1.1"
     author = "Stefan Grosser"
     author_email = "stefan.grosser@zebbra.ch"
     base_url = "snmp-modulator"
